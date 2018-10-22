@@ -1,0 +1,19 @@
+    CS4760 Project 3
+    Alex Daigre
+
+    Git: https://github.com/AlexDaigre/cs4760_Assignment3
+
+        Program is working correctly. I have not found any segfaults 
+    or resources that do not get closed.
+
+    Options:
+        -h: Help
+        -s: Limits the number of concurrent user proceesses to the given number(int).
+        -l: The given argument(string) specifies the neame of the logfile.
+        -t: The given number(int) specifies the max amount of time the program will run for.
+               
+    Difficulties:
+        I had a bit of trouble geting the structure of the main loops correct. I ended up 
+        re-writing these sections several times. I did not have too much trouble getting the
+        semephores to work, other than a bit of trouble figuring out the arguments of the
+        command.

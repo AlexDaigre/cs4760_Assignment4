@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "ipc.h": "c",
+        "semaphore.h": "c"
+    }
+}

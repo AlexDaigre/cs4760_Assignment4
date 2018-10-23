@@ -16,6 +16,9 @@
 void childClosed(int sig);
 void closeProgramSignal(int sig);
 void closeProgram();
+void interrupt(int sig, siginfo_t* info, void* context);
+int setTimer(double sec);
+int setInterrupt();
 void setupSharedClock();
 void setupMsgCenter();
 void setupSharedPCBs();
@@ -81,6 +84,18 @@ int main (int argc, char *argv[]) {
     setupSharedPCBs();
     setupSemaphore();
 
+    //start the end program timer
+    if (setInterrupt() == -1){
+        printf("Failed to set up SIGPROF handler.\n");
+        closeProgram();
+    }
+
+    if (setTimer(maxRunTime) == -1){
+        printf("Failed to set up SIGPROF timer.\n");
+        closeProgram();
+    }
+
+    while(1==1){}
 
     closeProgram();
 }
@@ -187,6 +202,25 @@ void childClosed(int sig){
 
 void closeProgramSignal(int sig){
     closeProgram();
+}
+
+int setInterrupt(){
+    struct sigaction act;
+    act.sa_sigaction = interrupt;
+    act.sa_flags = 0;
+    return ((sigemptyset(&act.sa_mask) == -1) || (sigaction(SIGALRM, &act, NULL) == -1));
+}
+
+void interrupt(int signo, siginfo_t* info, void* context){
+    closeProgram();
+}
+
+int setTimer(double sec){
+    struct itimerval value;
+    value.it_interval.tv_sec = sec;
+    value.it_interval.tv_usec = 0;
+    value.it_value = value.it_interval;
+    return (setitimer(ITIMER_PROF, &value,  NULL));
 }
 
 void closeProgram(){

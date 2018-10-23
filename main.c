@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 #include <sys/shm.h>
 #include <sys/time.h>
-#include <ProcessControlBlock.h>
+#include "ProcessControlBlock.h"
 
 void childClosed(int sig);
 void closeProgramSignal(int sig);
@@ -66,8 +66,16 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    //Intilize various external memories
+    //setup output file
     setupOutputFile();
+
+    //display run parameters
+    printf("Log file name: %s\n", logFile);
+    fprintf(outputFile, "Log file name: %s\n", logFile);
+    printf("Max run time: %d\n", maxRunTime);
+    fprintf(outputFile, "Max run time: %d\n", maxRunTime);
+
+    //Intilize various shared memory
     setupSharedClock();
     setupMsgCenter();
     setupSharedPCBs();

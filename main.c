@@ -11,37 +11,47 @@
 #include <sys/wait.h>
 #include <sys/shm.h>
 #include <sys/time.h>
+#include <ProcessControlBlock.h>
 
 void childClosed(int sig);
 void closeProgramSignal(int sig);
-void interrupt(int sig, siginfo_t* info, void* context);
-int setTimer(double sec);
 void closeProgram();
-int setInterrupt();
+void setupSharedClock();
+void setupMsgCenter();
+void setupSharedPCBs();
+void setupSemaphore();
+void setupOutputFile();
+
+int clockShmId;
+int* clockShmPtr;
 
 int msgShmId;
 int* msgShmPtr;
+
+int PCBShmId;
+int* PCBShmPtr;
+
 sem_t* sem;
-int currentProcesses = 0;
-pid_t createdProcesses[100] = {-5};
+
+int totalProcesses = 0;
+int avaliblePCBs[20] = {0};
 FILE* outputFile;
 
 int main (int argc, char *argv[]) {
+    //set signals
     signal(SIGCHLD, childClosed);
     signal(SIGINT, closeProgramSignal);
+
+    //set default values and get command line inputs
     int c;
-    int maxProcesses = 5;
-    int maxRunTime = 2;
+    int maxRunTime = 20;
     char* logFile = "logFile.txt";
 
     while ((c = getopt (argc, argv, "hs:l:t:")) != -1){
         switch (c){
             case 'h':
-                printf("Options:\n-h: Help\n-s: Limits the number of concurrent user proceesses to the given number(int).\n-l: The given argument(string) specifies the neame of the logfile.\n-t: The given number(int) specifies the max amount of time the program will run for.\n");
+                printf("Options:\n-h: Help\n-l: The given argument(string) specifies the neame of the logfile.\n-t: The given number(int) specifies the max amount of time the program will run for.\n");
                 exit(0);
-                break;
-            case 's':
-                maxProcesses = atoi(optarg);
                 break;
             case 'l':
                 logFile = optarg;
@@ -56,20 +66,62 @@ int main (int argc, char *argv[]) {
         }
     }
 
+    //Intilize various external memories
+    setupOutputFile();
+    setupSharedClock();
+    setupMsgCenter();
+    setupSharedPCBs();
+    setupSemaphore();
+
+
+    closeProgram();
+}
+
+void setupOutputFile(){
+    char* logFile = "logFile.txt";
     outputFile = fopen(logFile, "w");
     if (outputFile == NULL){
         printf("Failed to open output file.\n");
         closeProgram();
     }
+}
 
-    printf("Number of children: %d\n", maxProcesses);
-    fprintf(outputFile, "Number of children: %d\n", maxProcesses);
-    printf("Log file name: %s\n", logFile);
-    fprintf(outputFile, "Log file name: %s\n", logFile);
-    printf("Max run time: %d\n", maxRunTime);
-    fprintf(outputFile, "Max run time: %d\n", maxRunTime);
+void setupSharedClock(){
+    key_t sharedClockKey;
+    if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
+        sharedClockKey = ftok("/tmp/daigreTmp677543", 0);
+     } else {
+        printf("ftok error in parrent\n");
+        exit(1);
+    }
 
-    msgShmId = shmget(IPC_PRIVATE, sizeof(int)*4, IPC_CREAT | 0666);
+    clockShmId = shmget(sharedClockKey, sizeof(int)*2, IPC_CREAT | 0666);
+    if (clockShmId < 0) {
+        printf("shmget error in parrent\n");
+        exit(1);
+    }
+
+    clockShmPtr = (int *) shmat(clockShmId, NULL, 0);
+    if ((long) clockShmPtr == -1) {
+        printf("shmat error in parrent\n");
+        shmctl(clockShmId, IPC_RMID, NULL);
+        exit(1);
+    }
+
+    clockShmPtr[0] = 0;
+    clockShmPtr[1] = 0;
+}
+
+void setupMsgCenter(){
+    key_t sharedMsgkKey;
+    if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
+        sharedMsgkKey = ftok("/tmp/daigreTmp677543", 1);
+     } else {
+        printf("ftok error in parrent\n");
+        exit(1);
+    }
+
+    msgShmId = shmget(sharedMsgkKey, sizeof(int)*2, IPC_CREAT | 0666);
     if (msgShmId < 0) {
         printf("shmget error in parrent\n");
         exit(1);
@@ -82,11 +134,37 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
 
-    msgShmPtr[0] = 0;
-    msgShmPtr[1] = 0;
-    msgShmPtr[2] = -1;
-    msgShmPtr[3] = -1;
+    msgShmPtr[0] = -1;
+    msgShmPtr[1] = -1;
+}
 
+void setupSharedPCBs(){
+    key_t sharedPCBKey;
+    if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
+        sharedPCBKey = ftok("/tmp/daigreTmp677543", 2);
+     } else {
+        printf("ftok error in parrent\n");
+        exit(1);
+    }
+
+    PCBShmId = shmget(sharedPCBKey, sizeof(struct ProcessControlBlock)*20, IPC_CREAT | 0666);
+    if (PCBShmId < 0) {
+        printf("shmget error in parrent\n");
+        exit(1);
+    }
+
+    PCBShmPtr = (int *) shmat(PCBShmId, NULL, 0);
+    if ((long) PCBShmPtr == -1) {
+        printf("shmat error in parrent\n");
+        shmctl(PCBShmId, IPC_RMID, NULL);
+        exit(1);
+    }
+
+    PCBShmPtr[0] = 0;
+    PCBShmPtr[1] = 0;
+}
+
+void setupSemaphore(){
     #define SNAME "/daigreSem432098786"
     sem = sem_open(SNAME, O_CREAT, 0644, 100);
     
@@ -94,92 +172,18 @@ int main (int argc, char *argv[]) {
         perror("Failed to open semphore for empty");
         closeProgram();
     }
-
-    if (setInterrupt() == -1){
-        printf("Failed to set up SIGPROF handler.\n");
-        closeProgram();
-    }
-
-    if (setTimer(maxRunTime) == -1){
-        printf("Failed to set up SIGPROF timer.\n");
-        closeProgram();
-    }
-
-    int totalCreatedProcesses = 0;
-    int totalClosedProcesses = 0;
-    pid_t newForkPid;
-    int closedChildren = 0;
-    while((closedChildren < 100)){    
-        if ((currentProcesses <= maxProcesses) && (totalCreatedProcesses < 100)){
-            currentProcesses++;
-            newForkPid = fork();
-            if (newForkPid == 0){
-                char msgShmIdString[20];
-                sprintf(msgShmIdString, "%d", msgShmId);
-                execlp("./worker","./worker", msgShmIdString, NULL);
-                fprintf(stderr,"%s failed to exec worker!\n",argv[0]);
-                exit(1);
-            }
-            createdProcesses[totalCreatedProcesses] = newForkPid;
-            totalCreatedProcesses++;
-        }
-        if ((msgShmPtr[2] >= 0) && (msgShmPtr[3] >= 0)){
-            pid_t childEnded = wait(NULL);     
-            totalClosedProcesses++;
-            printf("%d P: Child %d has terminated at system time %d:%d with termination time of %d:%d\n", totalClosedProcesses, childEnded, msgShmPtr[0], msgShmPtr[1], msgShmPtr[2], msgShmPtr[3]);
-            fprintf(outputFile, "%d P: Child %d has terminated at system time %d:%d with termination time of %d:%d\n", totalClosedProcesses, childEnded, msgShmPtr[0], msgShmPtr[1], msgShmPtr[2], msgShmPtr[3]);
-            closedChildren++;
-            msgShmPtr[2] = -1;
-            msgShmPtr[3] = -1;
-        }
-        msgShmPtr[1]++;
-        if (msgShmPtr[1] >= 1000000000){
-            msgShmPtr[1] -= 1000000000;
-            msgShmPtr[0]++;
-        }
-    }
-    closeProgram();
 }
 
 void childClosed(int sig){
-    currentProcesses--;
-    // printf("Child Closed\n");
 }
 
 void closeProgramSignal(int sig){
     closeProgram();
 }
 
-int setInterrupt(){
-    struct sigaction act;
-    act.sa_sigaction = interrupt;
-    act.sa_flags = 0;
-    return ((sigemptyset(&act.sa_mask) == -1) || (sigaction(SIGALRM, &act, NULL) == -1));
-}
-
-void interrupt(int signo, siginfo_t* info, void* context){
-    closeProgram();
-}
-
-int setTimer(double sec){
-    struct itimerval value;
-    value.it_interval.tv_sec = sec;
-    value.it_interval.tv_usec = 0;
-    value.it_value = value.it_interval;
-    return (setitimer(ITIMER_PROF, &value,  NULL));
-}
-
 void closeProgram(){
-    int i;
-    for(i = 0; i < 100; i++){
-        if(i > 0){
-            if(createdProcesses[i] != -5){
-                kill(createdProcesses[i], SIGINT);
-            }
-        }
-    }
-    shmctl(msgShmId, IPC_RMID, NULL);
-    shmdt(msgShmPtr);
+    shmctl(clockShmId, IPC_RMID, NULL);
+    shmdt(clockShmPtr);
     sem_unlink(SNAME);
     fclose(outputFile);
     exit(0);

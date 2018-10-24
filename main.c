@@ -24,6 +24,8 @@ void setupMsgCenter();
 void setupSharedPCBs();
 void setupSemaphore();
 void setupOutputFile();
+void createProcesses();
+void advanceTime();
 
 int clockShmId;
 int* clockShmPtr;
@@ -32,9 +34,14 @@ int msgShmId;
 int* msgShmPtr;
 
 int PCBShmId;
-int* PCBShmPtr;
+struct ProcessControlBlock* PCBShmPtr;
+
+int createNextProcessAt;
 
 sem_t* sem;
+
+pid_t lowPriorityQueue[20];
+pid_t highPriorityQueue[20];
 
 int totalProcesses = 0;
 int avaliblePCBs[20] = {0};
@@ -95,9 +102,53 @@ int main (int argc, char *argv[]) {
         closeProgram();
     }
 
-    while(1==1){}
+    while(1==1){
+        createProcesses();
+        advanceTime();
+    }
 
     closeProgram();
+}
+
+void createProcesses(){
+    pid_t newForkPid;
+
+    if (createNextProcessAt >= 0){
+        int randNumber = (rand() % 2);
+        createNextProcessAt = randNumber + clockShmPtr[0];
+    }
+
+    if (clockShmPtr[0] > createNextProcessAt){
+        int firstOpenPCB = -1;
+        int i;
+        for(i=0; i<20; i++){
+            if (avaliblePCBs[i] == 0){
+                firstOpenPCB = i;
+                break;
+            }
+        }
+        if(firstOpenPCB >= 0){
+            createNextProcessAt = -1;
+            newForkPid = fork();
+            if (newForkPid == 0){
+                execlp("./worker","./worker", NULL);
+                fprintf(stderr,"Failed to exec worker!\n");
+                exit(1);
+            }
+            struct ProcessControlBlock newPCB;
+            //initilise PCB struct
+            avaliblePCBs[i] = 1;
+            PCBShmPtr[i] = newPCB;
+        }
+    }
+}
+
+void advanceTime(){
+    clockShmPtr[1]++;
+    while (clockShmPtr[1] >= 1000000000){
+        clockShmPtr[1] -= 1000000000;
+        clockShmPtr[0]++;
+    }
 }
 
 void setupOutputFile(){
@@ -114,19 +165,22 @@ void setupSharedClock(){
     if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
         sharedClockKey = ftok("/tmp/daigreTmp677543", 0);
      } else {
-        printf("ftok error in parrent\n");
+        printf("ftok error in parrent: setupSharedClock\n");
+        printf("Error: %d\n", errno);
         exit(1);
     }
 
     clockShmId = shmget(sharedClockKey, sizeof(int)*2, IPC_CREAT | 0666);
     if (clockShmId < 0) {
-        printf("shmget error in parrent\n");
+        printf("shmget error in parrent: setupSharedClock\n");
+        printf("Error: %d\n", errno);
         exit(1);
     }
 
     clockShmPtr = (int *) shmat(clockShmId, NULL, 0);
     if ((long) clockShmPtr == -1) {
-        printf("shmat error in parrent\n");
+        printf("shmat error in parrent: setupSharedClock\n");
+        printf("Error: %d\n", errno);
         shmctl(clockShmId, IPC_RMID, NULL);
         exit(1);
     }
@@ -140,19 +194,22 @@ void setupMsgCenter(){
     if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
         sharedMsgkKey = ftok("/tmp/daigreTmp677543", 1);
      } else {
-        printf("ftok error in parrent\n");
+        printf("ftok error in parrent: setupMsgCenter\n");
+        printf("Error: %d\n", errno);
         exit(1);
     }
 
     msgShmId = shmget(sharedMsgkKey, sizeof(int)*2, IPC_CREAT | 0666);
     if (msgShmId < 0) {
-        printf("shmget error in parrent\n");
+        printf("shmget error in parrent: setupMsgCenter\n");
+        printf("Error: %d\n", errno);
         exit(1);
     }
 
     msgShmPtr = (int *) shmat(msgShmId, NULL, 0);
     if ((long) msgShmPtr == -1) {
-        printf("shmat error in parrent\n");
+        printf("shmat error in parrent: setupMsgCenter\n");
+        printf("Error: %d\n", errno);
         shmctl(msgShmId, IPC_RMID, NULL);
         exit(1);
     }
@@ -164,27 +221,27 @@ void setupMsgCenter(){
 void setupSharedPCBs(){
     key_t sharedPCBKey;
     if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
-        sharedPCBKey = ftok("/tmp/daigreTmp677543", 2);
+        sharedPCBKey = ftok("/tmp/daigreTmp66755", 0);
      } else {
-        printf("ftok error in parrent\n");
+        printf("ftok error in parrent: setupSharedPCBs\n");
+        printf("Error: %d\n", errno);
         exit(1);
     }
 
     PCBShmId = shmget(sharedPCBKey, sizeof(struct ProcessControlBlock)*20, IPC_CREAT | 0666);
     if (PCBShmId < 0) {
-        printf("shmget error in parrent\n");
+        printf("shmget error in parrent: setupSharedPCBs\n");
+        printf("Error: %d\n", errno);
         exit(1);
     }
 
-    PCBShmPtr = (int *) shmat(PCBShmId, NULL, 0);
+    PCBShmPtr = (struct ProcessControlBlock *) shmat(PCBShmId, NULL, 0);
     if ((long) PCBShmPtr == -1) {
-        printf("shmat error in parrent\n");
+        printf("shmat error in parrent: setupSharedPCBs\n");
+        printf("Error: %d\n", errno);
         shmctl(PCBShmId, IPC_RMID, NULL);
         exit(1);
     }
-
-    PCBShmPtr[0] = 0;
-    PCBShmPtr[1] = 0;
 }
 
 void setupSemaphore(){

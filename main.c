@@ -12,6 +12,7 @@
 #include <sys/shm.h>
 #include <sys/time.h>
 #include "ProcessControlBlock.h"
+#include "sharedMemory.h"
 
 #define maxProcesses 18
 
@@ -21,26 +22,16 @@ void closeProgram();
 void interrupt(int sig, siginfo_t* info, void* context);
 int setTimer(double sec);
 int setInterrupt();
-void setupSharedClock();
-void setupMsgCenter();
-void setupSharedPCBs();
-void setupSemaphore();
 void setupOutputFile();
 void createProcesses();
 void advanceTime();
 
-int clockShmId;
 int* clockShmPtr;
-
-int msgShmId;
 int* msgShmPtr;
-
-int PCBShmId;
 struct ProcessControlBlock* PCBShmPtr;
+sem_t* sem;
 
 int createNextProcessAt = -1;
-
-sem_t* sem;
 
 int currentProcesses = 0;
 
@@ -90,10 +81,16 @@ int main (int argc, char *argv[]) {
     fprintf(outputFile, "Max run time: %d\n", maxRunTime);
 
     //Intilize various shared memory
-    setupSharedClock();
-    setupMsgCenter();
-    setupSharedPCBs();
-    setupSemaphore();
+    clockShmPtr = setupSharedClock();
+    clockShmPtr[0] = 0;
+    clockShmPtr[1] = 0;
+
+    msgShmPtr = setupMsgCenter();
+    msgShmPtr[0] = -1;
+    msgShmPtr[1] = -1;
+
+    PCBShmPtr = setupSharedPCBs();
+    sem = setupSemaphore();
 
     //start the end program timer
     if (setInterrupt() == -1){
@@ -198,101 +195,6 @@ void setupOutputFile(){
     }
 }
 
-void setupSharedClock(){
-    key_t sharedClockKey;
-    if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
-        sharedClockKey = ftok("/tmp/daigreTmp677543", 0);
-     } else {
-        printf("ftok error in parrent: setupSharedClock\n");
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
-
-    clockShmId = shmget(sharedClockKey, sizeof(int)*2, IPC_CREAT | 0666);
-    if (clockShmId < 0) {
-        printf("shmget error in parrent: setupSharedClock\n");
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
-
-    clockShmPtr = (int *) shmat(clockShmId, NULL, 0);
-    if ((long) clockShmPtr == -1) {
-        printf("shmat error in parrent: setupSharedClock\n");
-        printf("Error: %d\n", errno);
-        shmctl(clockShmId, IPC_RMID, NULL);
-        exit(1);
-    }
-
-    clockShmPtr[0] = 0;
-    clockShmPtr[1] = 0;
-}
-
-void setupMsgCenter(){
-    key_t sharedMsgkKey;
-    if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
-        sharedMsgkKey = ftok("/tmp/daigreTmp677543", 1);
-     } else {
-        printf("ftok error in parrent: setupMsgCenter\n");
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
-
-    msgShmId = shmget(sharedMsgkKey, sizeof(int)*2, IPC_CREAT | 0666);
-    if (msgShmId < 0) {
-        printf("shmget error in parrent: setupMsgCenter\n");
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
-
-    msgShmPtr = (int *) shmat(msgShmId, NULL, 0);
-    if ((long) msgShmPtr == -1) {
-        printf("shmat error in parrent: setupMsgCenter\n");
-        printf("Error: %d\n", errno);
-        shmctl(msgShmId, IPC_RMID, NULL);
-        exit(1);
-    }
-
-    msgShmPtr[0] = -1;
-    msgShmPtr[1] = -1;
-}
-
-void setupSharedPCBs(){
-    key_t sharedPCBKey;
-    if (-1 != open("/tmp/daigreTmp677543", O_CREAT, 0777)) {
-        sharedPCBKey = ftok("/tmp/daigreTmp66755", 0);
-     } else {
-        printf("ftok error in parrent: setupSharedPCBs\n");
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
-
-    PCBShmId = shmget(sharedPCBKey, sizeof(struct ProcessControlBlock)*maxProcesses, IPC_CREAT | 0666);
-    if (PCBShmId < 0) {
-        printf("shmget error in parrent: setupSharedPCBs\n");
-        printf("Error: %d\n", errno);
-        exit(1);
-    }
-
-    //(void *) (int *)?
-    PCBShmPtr = (struct ProcessControlBlock *) shmat(PCBShmId, NULL, 0);
-    if ((long) PCBShmPtr == -1) {
-        printf("shmat error in parrent: setupSharedPCBs\n");
-        printf("Error: %d\n", errno);
-        shmctl(PCBShmId, IPC_RMID, NULL);
-        exit(1);
-    }
-}
-
-void setupSemaphore(){
-    #define SNAME "/daigreSem432098786"
-    sem = sem_open(SNAME, O_CREAT, 0644, 100);
-    
-    if (sem == SEM_FAILED) {
-        perror("Failed to open semphore for empty");
-        closeProgram();
-    }
-}
-
 void closeProgramSignal(int sig){
     closeProgram();
 }
@@ -319,7 +221,7 @@ int setTimer(double sec){
 void closeProgram(){
     shmctl(clockShmId, IPC_RMID, NULL);
     shmdt(clockShmPtr);
-    sem_unlink(SNAME);
+    sem_unlink(SHMNAME);
     fclose(outputFile);
     exit(0);
 }

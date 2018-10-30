@@ -1,9 +1,9 @@
 CC      = gcc
 CFLAGS  = -g
 TARGET1 = oss
-OBJS1   = main.o
+OBJS1   = main.o sharedMemory.o
 TARGET2 = worker
-OBJS2   = worker.o
+OBJS2   = worker.o sharedMemory.o
 
 all: $(TARGET1) $(TARGET2)
 
@@ -18,6 +18,10 @@ main.o: main.c
 
 worker.o: worker.c
 	$(CC) $(CFLAGS) -c worker.c
+
+sharedMemory.o: sharedMemory.c
+	$(CC) $(CFLAGS) -c sharedMemory.c
+
 
 clean:
 	/bin/rm -f *.o $(TARGET)

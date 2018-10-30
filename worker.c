@@ -9,11 +9,15 @@
 #include <sys/types.h>
 #include <sys/shm.h>
 #include "sharedMemory.h"
+#include "ProcessControlBlock.h"
 
 void closeProgramSignal(int sig);
 void closeProgram();
 
 int* clockShmPtr;
+int* msgShmPtr;
+struct ProcessControlBlock* PCBShmPtr;
+sem_t* sem;
 
 int main (int argc, char *argv[]) {
     int clockShmId;

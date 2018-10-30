@@ -13,6 +13,8 @@
 #include <sys/time.h>
 #include "ProcessControlBlock.h"
 
+#define maxProcesses 18
+
 void childClosed(int sig);
 void closeProgramSignal(int sig);
 void closeProgram();
@@ -40,11 +42,13 @@ int createNextProcessAt;
 
 sem_t* sem;
 
-pid_t lowPriorityQueue[20];
-pid_t highPriorityQueue[20];
+int currentProcesses = 0;
+
+pid_t lowPriorityQueue[maxProcesses];
+pid_t highPriorityQueue[maxProcesses];
 
 int totalProcesses = 0;
-int avaliblePCBs[20] = {0};
+int avaliblePCBs[maxProcesses] = {0};
 FILE* outputFile;
 
 int main (int argc, char *argv[]) {
@@ -103,11 +107,19 @@ int main (int argc, char *argv[]) {
     }
 
     while(1==1){
-        createProcesses();
+        if ((currentProcesses <= maxProcesses)){
+            currentProcesses++;
+            createProcesses();
+        }
         advanceTime();
     }
 
     closeProgram();
+}
+
+void childClosed(int sig){
+    currentProcesses--;
+    // printf("Child Closed\n");
 }
 
 void createProcesses(){
@@ -121,7 +133,7 @@ void createProcesses(){
     if (clockShmPtr[0] > createNextProcessAt){
         int firstOpenPCB = -1;
         int i;
-        for(i=0; i<20; i++){
+        for(i=0; i<maxProcesses; i++){
             if (avaliblePCBs[i] == 0){
                 firstOpenPCB = i;
                 break;
@@ -136,7 +148,14 @@ void createProcesses(){
                 exit(1);
             }
             struct ProcessControlBlock newPCB;
-            //initilise PCB struct
+            newPCB.pid = newForkPid;
+            newPCB.priority = (rand() % 100) > 90 ? 0 : 1;
+            newPCB.timeUsedDurringLastBurst[0] = 0;
+            newPCB.timeUsedDurringLastBurst[1] = 0;
+            newPCB.totalCpuTimeUsed[0] = 0;
+            newPCB.totalCpuTimeUsed[1] = 0;
+            newPCB.totalTimeInSystem[0] = 0;
+            newPCB.totalTimeInSystem[1] = 0;
             avaliblePCBs[i] = 1;
             PCBShmPtr[i] = newPCB;
         }
@@ -228,13 +247,14 @@ void setupSharedPCBs(){
         exit(1);
     }
 
-    PCBShmId = shmget(sharedPCBKey, sizeof(struct ProcessControlBlock)*20, IPC_CREAT | 0666);
+    PCBShmId = shmget(sharedPCBKey, sizeof(struct ProcessControlBlock)*maxProcesses, IPC_CREAT | 0666);
     if (PCBShmId < 0) {
         printf("shmget error in parrent: setupSharedPCBs\n");
         printf("Error: %d\n", errno);
         exit(1);
     }
 
+    //(void *) (int *)?
     PCBShmPtr = (struct ProcessControlBlock *) shmat(PCBShmId, NULL, 0);
     if ((long) PCBShmPtr == -1) {
         printf("shmat error in parrent: setupSharedPCBs\n");
@@ -252,9 +272,6 @@ void setupSemaphore(){
         perror("Failed to open semphore for empty");
         closeProgram();
     }
-}
-
-void childClosed(int sig){
 }
 
 void closeProgramSignal(int sig){

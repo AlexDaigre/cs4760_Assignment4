@@ -1,0 +1,2 @@
+Log file name: logFile.txt
+Max run time: 20

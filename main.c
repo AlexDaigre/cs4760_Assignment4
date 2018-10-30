@@ -181,7 +181,7 @@ void createProcesses(){
 }
 
 void advanceTime(){
-    clockShmPtr[1] += 25;
+    clockShmPtr[1] += 10;
     while (clockShmPtr[1] >= 1000000000){
         clockShmPtr[1] -= 1000000000;
         clockShmPtr[0]++;

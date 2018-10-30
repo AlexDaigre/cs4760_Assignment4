@@ -119,8 +119,18 @@ int main (int argc, char *argv[]) {
 }
 
 void childClosed(int sig){
-    // currentProcesses--;
-    // printf("Child Closed\n");
+    pid_t closedChild = wait(NULL);      
+    int closedPCB = -1;
+    int i;
+    for(i=0; i<maxProcesses; i++){
+        if (PCBShmPtr[i].pid == closedChild){
+            closedPCB = i;
+            printf("closedPCB %d\n", closedPCB);
+            break;
+        }
+    }
+    avaliblePCBs[i] = 0;
+    currentProcesses--;
 }
 
 void createProcesses(){
@@ -171,7 +181,7 @@ void createProcesses(){
 }
 
 void advanceTime(){
-    clockShmPtr[1]++;
+    clockShmPtr[1] += 25;
     while (clockShmPtr[1] >= 1000000000){
         clockShmPtr[1] -= 1000000000;
         clockShmPtr[0]++;

@@ -38,7 +38,7 @@ int* msgShmPtr;
 int PCBShmId;
 struct ProcessControlBlock* PCBShmPtr;
 
-int createNextProcessAt;
+int createNextProcessAt = -1;
 
 sem_t* sem;
 
@@ -107,8 +107,9 @@ int main (int argc, char *argv[]) {
     }
 
     while(1==1){
-        if ((currentProcesses <= maxProcesses)){
-            currentProcesses++;
+        // printf("looping!\n");
+        if ((currentProcesses < maxProcesses)){
+            // printf("Creating process!\n");
             createProcesses();
         }
         advanceTime();
@@ -118,28 +119,33 @@ int main (int argc, char *argv[]) {
 }
 
 void childClosed(int sig){
-    currentProcesses--;
+    // currentProcesses--;
     // printf("Child Closed\n");
 }
 
 void createProcesses(){
+    // printf("creating child\n");
     pid_t newForkPid;
 
-    if (createNextProcessAt >= 0){
+    if (createNextProcessAt < 0){
         int randNumber = (rand() % 2);
         createNextProcessAt = randNumber + clockShmPtr[0];
+        printf("next process at %d seconds\n", createNextProcessAt);
     }
 
-    if (clockShmPtr[0] > createNextProcessAt){
+    if ((clockShmPtr[0] > createNextProcessAt) && (createNextProcessAt > 0)){
+        printf("%d seconds reached\n", createNextProcessAt);
         int firstOpenPCB = -1;
         int i;
         for(i=0; i<maxProcesses; i++){
             if (avaliblePCBs[i] == 0){
                 firstOpenPCB = i;
+                printf("firstOpenPCB %d\n", firstOpenPCB);
                 break;
             }
         }
         if(firstOpenPCB >= 0){
+            printf("creating child\n");
             createNextProcessAt = -1;
             newForkPid = fork();
             if (newForkPid == 0){
@@ -158,6 +164,8 @@ void createProcesses(){
             newPCB.totalTimeInSystem[1] = 0;
             avaliblePCBs[i] = 1;
             PCBShmPtr[i] = newPCB;
+            createNextProcessAt = -1;
+            currentProcesses++;
         }
     }
 }
@@ -167,6 +175,7 @@ void advanceTime(){
     while (clockShmPtr[1] >= 1000000000){
         clockShmPtr[1] -= 1000000000;
         clockShmPtr[0]++;
+        printf("%d:%d\n", clockShmPtr[0], clockShmPtr[1]);
     }
 }
 

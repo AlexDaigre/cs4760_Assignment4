@@ -40,24 +40,24 @@ int main (int argc, char *argv[]) {
         terminationSeconds++;
     }
     
-    // printf("Child %d determined exit time.\n", getpid());
+    printf("Child %d determined exit time.\n", getpid());
     
     int exitFlag = 0;
     do{
         sem_wait(sem);
-        // printf("Child(%d) is in critical section.\n", getpid());
+        printf("Child(%d) is in critical section.\n", getpid());
         if ((terminationSeconds <= msgShmPtr[0]) || ((terminationSeconds == msgShmPtr[0]) && (terminationNanoSeconds <= msgShmPtr[1]))){
             if((msgShmPtr[2] < 0) && (msgShmPtr[3] < 0)){
                 msgShmPtr[2] = terminationSeconds;
                 msgShmPtr[3] = terminationNanoSeconds;
-                // printf("C: Child %d has terminated at system time %d:%d with termination time of %d:%d\n", getpid(), msgShmPtr[0], msgShmPtr[1], terminationSeconds, terminationNanoSeconds);
+                printf("C: Child %d has terminated at system time %d:%d with termination time of %d:%d\n", getpid(), msgShmPtr[0], msgShmPtr[1], terminationSeconds, terminationNanoSeconds);
                 exitFlag = 1;
             }
         }    
         sem_post(sem);
     }while(exitFlag == 0);
 
-    // printf("Child %d exiting\n", getpid());
+    printf("Child %d exiting\n", getpid());
     closeProgram();
 }
 

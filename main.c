@@ -14,6 +14,7 @@
 #include "ProcessControlBlock.h"
 #include "sharedMemory.h"
 #include "definitions.h"
+#include "queue.h"
 
 void childClosed(int sig);
 void closeProgramSignal(int sig);
@@ -105,6 +106,15 @@ int main (int argc, char *argv[]) {
             // printf("Creating process!\n");
             createProcesses();
         }
+        if ((msgShmPtr[0] < 0) && (msgShmPtr[1] < 0)){
+            pid_t nextProcess = nextProcessToschedule();
+            if (nextProcess > 0){ 
+                // printf("High priority 1: %d\n", highPriorityQueue[1]);
+                msgShmPtr[0] = nextProcess;
+                msgShmPtr[1] = timeQuantum; 
+                printf("Scheduled %d for %d\n", nextProcess, msgShmPtr[1]);
+            }
+        }
         advanceTime();
     }
 
@@ -123,6 +133,11 @@ void childClosed(int sig){
         }
     }
     avaliblePCBs[i] = 0;
+    removeFromQueue(closedChild);
+    if (msgShmPtr[0] == closedChild){
+        msgShmPtr[0] = -1;
+        msgShmPtr[1] = -1; 
+    }
     currentProcesses--;
 }
 
@@ -158,7 +173,8 @@ void createProcesses(){
             }
             struct ProcessControlBlock newPCB;
             newPCB.pid = newForkPid;
-            newPCB.priority = (rand() % 100) > 90 ? 0 : 1;
+            int priority = (rand() % 100) > 90 ? 0 : 1;
+            newPCB.priority = priority;
             newPCB.timeUsedDurringLastBurst[0] = 0;
             newPCB.timeUsedDurringLastBurst[1] = 0;
             newPCB.totalCpuTimeUsed[0] = 0;
@@ -168,15 +184,16 @@ void createProcesses(){
             avaliblePCBs[i] = 1;
             PCBShmPtr[i] = newPCB;
             createNextProcessAt = -1;
+            addToQueue(newForkPid, priority);
             currentProcesses++;
         }
     }
 }
 
 void advanceTime(){
-    // clockShmPtr[0] += 1;
-    // clockShmPtr[1] += rand() % 1000;
-    clockShmPtr[1] += 10;
+    clockShmPtr[0] += 1;
+    clockShmPtr[1] += rand() % 1000;
+    // clockShmPtr[1] += 100;
     while (clockShmPtr[1] >= 1000000000){
         clockShmPtr[1] -= 1000000000;
         clockShmPtr[0]++;
@@ -218,12 +235,13 @@ int setTimer(double sec){
 
 void closeProgram(){
     shmctl(msgShmId, IPC_RMID, NULL);
-    shmdt(msgShmPtr);
+    // shmdt(msgShmPtr);
     shmctl(PCBShmId, IPC_RMID, NULL);
-    shmdt(PCBShmPtr);
+    // shmdt(PCBShmPtr);
     shmctl(clockShmId, IPC_RMID, NULL);
-    shmdt(clockShmPtr);
+    // shmdt(clockShmPtr);
     sem_unlink(SHMNAME);
     fclose(outputFile);
+    // printf("Exiting gracefully.\n");
     exit(0);
 }

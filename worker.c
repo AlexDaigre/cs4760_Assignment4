@@ -32,12 +32,17 @@ int main (int argc, char *argv[]) {
 
     printf("CHILD clock: %d:%d\n", clockShmPtr[0], clockShmPtr[1]);
 
-    // sem_t* sem = sem_open(SNAME, 0);
-    // if (sem == SEM_FAILED) {
-    //     printf("Failed to open semphore for empty");
-    //     closeProgram();
-    // }
-
+    int exitFlag = 0;
+    do{
+        sem_wait(sem);
+            // if (msgShmPtr[0] == getpid()){
+                printf("Child(%d) has determined it was scheduled.\n", getpid());
+                msgShmPtr[0] = -1;
+                msgShmPtr[1] = -1;
+                exitFlag = 1;
+            // }
+        sem_post(sem);
+    }while(exitFlag == 0);
     printf("Child %d exiting\n", getpid());
     closeProgram();
 }

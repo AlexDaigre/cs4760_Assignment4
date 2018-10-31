@@ -4,7 +4,13 @@
     #include <sys/types.h>
     #include "definitions.h"
 
-    pid_t lowPriorityQueue[maxProcesses];
-    pid_t highPriorityQueue[maxProcesses];
+    extern pid_t lowPriorityQueue[maxProcesses];
+    extern int nextInLow;
+    extern pid_t highPriorityQueue[maxProcesses];
+    extern int nextInHigh;
+
+    void addToQueue(pid_t process, int priority);
+    void removeFromQueue(pid_t process);
+    pid_t nextProcessToschedule();
 
 #endif

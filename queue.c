@@ -8,6 +8,7 @@ int nextInLow = 0;
 pid_t highPriorityQueue[maxProcesses] = {0};
 int nextInHigh = 0;
 
+pid_t nextProcess = -1;
 
 int avalibleHighPriorityItems();
 

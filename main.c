@@ -16,7 +16,8 @@
 #include "definitions.h"
 #include "queue.h"
 
-void childClosed(int sig);
+// void childClosed(int sig);
+void childClosed();
 void closeProgramSignal(int sig);
 void closeProgram();
 static void interrupt(int sig, siginfo_t* info, void* context);
@@ -41,7 +42,7 @@ FILE* outputFile;
 
 int main (int argc, char *argv[]) {
     //set signals
-    signal(SIGCHLD, childClosed);
+    // signal(SIGCHLD, childClosed);
     signal(SIGINT, closeProgramSignal);
 
     //set default values and get command line inputs
@@ -106,9 +107,11 @@ int main (int argc, char *argv[]) {
             // printf("Creating process!\n");
             createProcesses();
         }
-        if ((msgShmPtr[0] < 0) && (msgShmPtr[1] < 0)){
-            pid_t nextProcess = nextProcessToschedule();
-            if (nextProcess > 0){ 
+        if ((msgShmPtr[0] <= 0) && (msgShmPtr[1] <= 0)){
+            childClosed();
+            // printf("next process %d\n", nextProcess);
+            nextProcess = nextProcessToschedule();
+            if (nextProcess > 0){
                 // printf("High priority 1: %d\n", highPriorityQueue[1]);
                 msgShmPtr[0] = nextProcess;
                 msgShmPtr[1] = timeQuantum; 
@@ -121,24 +124,54 @@ int main (int argc, char *argv[]) {
     closeProgram();
 }
 
-void childClosed(int sig){
-    pid_t closedChild = wait(NULL);      
-    int closedPCB = -1;
-    int i;
-    for(i=0; i<maxProcesses; i++){
-        if (PCBShmPtr[i].pid == closedChild){
-            closedPCB = i;
-            printf("closedPCB %d\n", closedPCB);
-            break;
+// void childClosed(int sig){
+//     pid_t closedChild = wait(NULL);      
+//     printf("closeing child %d\n", closedChild);
+//     int closedPCB = -1;
+//     int i;
+//     for(i=0; i<maxProcesses; i++){
+//         if (PCBShmPtr[i].pid == closedChild){
+//             closedPCB = i;
+//             // printf("closedPCB %d\n", closedPCB);
+//             break;
+//         }
+//     }
+//     avaliblePCBs[i] = 0;
+//     removeFromQueue(closedChild);
+//     if (msgShmPtr[0] == closedChild){
+//         printf("Unscheduling child %d\n", closedChild);
+//         msgShmPtr[0] = -1;
+//         msgShmPtr[1] = -1; 
+//     }
+//     currentProcesses--;
+// }
+
+void childClosed(){
+    int status;
+    // pid_t closedChild = waitpid(-1, &status, WNOHANG);
+    pid_t closedChild = wait(NULL);
+    if (closedChild > 0) {
+        printf("closeing child %d\n", closedChild);
+        int closedPCB = -1;
+        int i;
+        for(i=0; i<maxProcesses; i++){
+            if (PCBShmPtr[i].pid == closedChild){
+                closedPCB = i;
+                // printf("closedPCB %d\n", closedPCB);
+                break;
+            }
         }
+        avaliblePCBs[i] = 0;
+        removeFromQueue(closedChild);
+        if (msgShmPtr[0] == closedChild){
+            printf("Unscheduling child %d\n", closedChild);
+            msgShmPtr[0] = -1;
+            msgShmPtr[1] = -1; 
+        }
+        currentProcesses--;
+    } else {
+        // printf("no child to reap\n");
     }
-    avaliblePCBs[i] = 0;
-    removeFromQueue(closedChild);
-    if (msgShmPtr[0] == closedChild){
-        msgShmPtr[0] = -1;
-        msgShmPtr[1] = -1; 
-    }
-    currentProcesses--;
 }
 
 void createProcesses(){
@@ -148,17 +181,17 @@ void createProcesses(){
     if (createNextProcessAt < 0){
         int randNumber = (rand() % 2);
         createNextProcessAt = randNumber + clockShmPtr[0];
-        printf("next process at %d seconds\n", createNextProcessAt);
+        // printf("next process at %d seconds\n", createNextProcessAt);
     }
 
     if ((clockShmPtr[0] > createNextProcessAt) && (createNextProcessAt > 0)){
-        printf("%d seconds reached\n", createNextProcessAt);
+        // printf("%d seconds reached\n", createNextProcessAt);
         int firstOpenPCB = -1;
         int i;
         for(i=0; i<maxProcesses; i++){
             if (avaliblePCBs[i] == 0){
                 firstOpenPCB = i;
-                printf("firstOpenPCB %d\n", firstOpenPCB);
+                // printf("firstOpenPCB %d\n", firstOpenPCB);
                 break;
             }
         }
@@ -186,6 +219,11 @@ void createProcesses(){
             createNextProcessAt = -1;
             addToQueue(newForkPid, priority);
             currentProcesses++;
+            if (nextProcess < 0){
+                nextProcess = newForkPid;
+                msgShmPtr[0] = nextProcess;
+                msgShmPtr[1] = timeQuantum; 
+            }
         }
     }
 }
@@ -243,5 +281,6 @@ void closeProgram(){
     sem_unlink(SHMNAME);
     fclose(outputFile);
     // printf("Exiting gracefully.\n");
+    
     exit(0);
 }

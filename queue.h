@@ -9,6 +9,8 @@
     extern pid_t highPriorityQueue[maxProcesses];
     extern int nextInHigh;
 
+    extern pid_t nextProcess;
+
     void addToQueue(pid_t process, int priority);
     void removeFromQueue(pid_t process);
     pid_t nextProcessToschedule();

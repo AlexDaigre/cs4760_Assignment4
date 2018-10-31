@@ -86,6 +86,7 @@ int main (int argc, char *argv[]) {
     msgShmPtr = setupMsgCenter();
     msgShmPtr[0] = -1;
     msgShmPtr[1] = -1;
+    msgShmPtr[2] = -1;
 
     PCBShmPtr = setupSharedPCBs();
     sem = setupSemaphore();
@@ -107,16 +108,16 @@ int main (int argc, char *argv[]) {
             // printf("Creating process!\n");
             createProcesses();
         }
-        if ((msgShmPtr[0] <= 0) && (msgShmPtr[1] <= 0)){
-            childClosed();
-            // printf("next process %d\n", nextProcess);
-            nextProcess = nextProcessToschedule();
+        if ((msgShmPtr[0] == -1) && (msgShmPtr[1] == -1)){
+            pid_t nextProcess = nextProcessToschedule();
             if (nextProcess > 0){
-                // printf("High priority 1: %d\n", highPriorityQueue[1]);
                 msgShmPtr[0] = nextProcess;
-                msgShmPtr[1] = timeQuantum; 
+                msgShmPtr[1] = timeQuantum;
                 printf("Scheduled %d for %d\n", msgShmPtr[0], msgShmPtr[1]);
             }
+        }
+        if (msgShmPtr[2] == 1){
+            childClosed();
         }
         advanceTime();
     }
@@ -147,31 +148,23 @@ int main (int argc, char *argv[]) {
 // }
 
 void childClosed(){
-    int status;
-    // pid_t closedChild = waitpid(-1, &status, WNOHANG);
     pid_t closedChild = wait(NULL);
-    if (closedChild > 0) {
-        printf("closeing child %d\n", closedChild);
-        int closedPCB = -1;
-        int i;
-        for(i=0; i<maxProcesses; i++){
-            if (PCBShmPtr[i].pid == closedChild){
-                closedPCB = i;
-                // printf("closedPCB %d\n", closedPCB);
-                break;
-            }
+    printf("closeing child %d\n", closedChild);
+    int closedPCB = -1;
+    int i;
+    for(i=0; i<maxProcesses; i++){
+        if (PCBShmPtr[i].pid == closedChild){
+            closedPCB = i;
+            // printf("closedPCB %d\n", closedPCB);
+            break;
         }
-        avaliblePCBs[i] = 0;
-        removeFromQueue(closedChild);
-        if (msgShmPtr[0] == closedChild){
-            printf("Unscheduling child %d\n", closedChild);
-            msgShmPtr[0] = -1;
-            msgShmPtr[1] = -1; 
-        }
-        currentProcesses--;
-    } else {
-        // printf("no child to reap\n");
     }
+    msgShmPtr[0] = -1;
+    msgShmPtr[1] = -1;
+    msgShmPtr[2] = -1;
+    avaliblePCBs[i] = 0;
+    removeFromQueue(closedChild);
+    currentProcesses--;
 }
 
 void createProcesses(){
@@ -219,11 +212,6 @@ void createProcesses(){
             createNextProcessAt = -1;
             addToQueue(newForkPid, priority);
             currentProcesses++;
-            if (nextProcess < 0){
-                nextProcess = newForkPid;
-                msgShmPtr[0] = nextProcess;
-                msgShmPtr[1] = timeQuantum; 
-            }
         }
     }
 }

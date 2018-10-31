@@ -37,8 +37,7 @@ int main (int argc, char *argv[]) {
         sem_wait(sem);
             if (msgShmPtr[0] == getpid()){
                 printf("Child(%d) has determined it was scheduled.\n", getpid());
-                msgShmPtr[0] = -1;
-                msgShmPtr[1] = -1;
+                msgShmPtr[2] = 1;
                 exitFlag = 1;
             }
         sem_post(sem);

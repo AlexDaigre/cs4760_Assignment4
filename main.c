@@ -19,7 +19,7 @@
 void childClosed(int sig);
 void closeProgramSignal(int sig);
 void closeProgram();
-void interrupt(int sig, siginfo_t* info, void* context);
+static void interrupt(int sig, siginfo_t* info, void* context);
 int setTimer(double sec);
 int setInterrupt();
 void setupOutputFile();
@@ -90,15 +90,15 @@ int main (int argc, char *argv[]) {
     sem = setupSemaphore();
 
     //start the end program timer
-    if (setInterrupt() == -1){
-        printf("Failed to set up SIGPROF handler.\n");
-        closeProgram();
-    }
+    // if (setInterrupt() == -1){
+    //     printf("Failed to set up SIGPROF handler.\n");
+    //     closeProgram();
+    // }
 
-    if (setTimer(maxRunTime) == -1){
-        printf("Failed to set up SIGPROF timer.\n");
-        closeProgram();
-    }
+    // if (setTimer(maxRunTime) == -1){
+    //     printf("Failed to set up SIGPROF timer.\n");
+    //     closeProgram();
+    // }
 
     while(1==1){
         // printf("looping!\n");
@@ -112,7 +112,7 @@ int main (int argc, char *argv[]) {
                 // printf("High priority 1: %d\n", highPriorityQueue[1]);
                 msgShmPtr[0] = nextProcess;
                 msgShmPtr[1] = timeQuantum; 
-                printf("Scheduled %d for %d\n", nextProcess, msgShmPtr[1]);
+                printf("Scheduled %d for %d\n", msgShmPtr[0], msgShmPtr[1]);
             }
         }
         advanceTime();
@@ -216,12 +216,12 @@ void closeProgramSignal(int sig){
 
 int setInterrupt(){
     struct sigaction act;
-    act.sa_sigaction = interrupt;
+    act.sa_sigaction = &interrupt;
     act.sa_flags = 0;
     return ((sigemptyset(&act.sa_mask) == -1) || (sigaction(SIGALRM, &act, NULL) == -1));
 }
 
-void interrupt(int signo, siginfo_t* info, void* context){
+static void interrupt(int signo, siginfo_t* info, void* context){
     closeProgram();
 }
 

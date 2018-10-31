@@ -13,6 +13,7 @@
 #include <sys/time.h>
 #include "sharedMemory.h"
 #include "ProcessControlBlock.h"
+#include "definitions.h"
 
 int* setupSharedClock(){
     key_t sharedClockKey;

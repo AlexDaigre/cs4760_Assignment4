@@ -13,8 +13,7 @@
 #include <sys/time.h>
 #include "ProcessControlBlock.h"
 #include "sharedMemory.h"
-
-#define maxProcesses 18
+#include "definitions.h"
 
 void childClosed(int sig);
 void closeProgramSignal(int sig);
@@ -34,9 +33,6 @@ sem_t* sem;
 int createNextProcessAt = -1;
 
 int currentProcesses = 0;
-
-pid_t lowPriorityQueue[maxProcesses];
-pid_t highPriorityQueue[maxProcesses];
 
 int totalProcesses = 0;
 int avaliblePCBs[maxProcesses] = {0};
@@ -178,6 +174,8 @@ void createProcesses(){
 }
 
 void advanceTime(){
+    // clockShmPtr[0] += 1;
+    // clockShmPtr[1] += rand() % 1000;
     clockShmPtr[1] += 10;
     while (clockShmPtr[1] >= 1000000000){
         clockShmPtr[1] -= 1000000000;
@@ -219,6 +217,10 @@ int setTimer(double sec){
 }
 
 void closeProgram(){
+    shmctl(msgShmId, IPC_RMID, NULL);
+    shmdt(msgShmPtr);
+    shmctl(PCBShmId, IPC_RMID, NULL);
+    shmdt(PCBShmPtr);
     shmctl(clockShmId, IPC_RMID, NULL);
     shmdt(clockShmPtr);
     sem_unlink(SHMNAME);

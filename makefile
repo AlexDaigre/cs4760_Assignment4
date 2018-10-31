@@ -1,7 +1,7 @@
 CC      = gcc
 CFLAGS  = -g
 TARGET1 = oss
-OBJS1   = main.o sharedMemory.o
+OBJS1   = main.o sharedMemory.o queue.o
 TARGET2 = worker
 OBJS2   = worker.o sharedMemory.o
 
@@ -21,6 +21,9 @@ worker.o: worker.c
 
 sharedMemory.o: sharedMemory.c
 	$(CC) $(CFLAGS) -c sharedMemory.c
+
+queue.o: queue.c
+	$(CC) $(CFLAGS) -c queue.c
 
 
 clean:

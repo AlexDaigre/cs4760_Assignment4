@@ -11,8 +11,6 @@
     #define MSGVAR 1
     #define PCBVAR 0
 
-    #define maxProcesses 18
-
     int msgShmId;
     int PCBShmId;
     int clockShmId;

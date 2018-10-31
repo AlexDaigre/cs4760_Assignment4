@@ -10,6 +10,7 @@
 #include <sys/shm.h>
 #include "sharedMemory.h"
 #include "ProcessControlBlock.h"
+#include "definitions.h"
 
 void closeProgramSignal(int sig);
 void closeProgram();
@@ -46,6 +47,8 @@ void closeProgramSignal(int sig){
 }
 
 void closeProgram(){
-    // shmdt(msgShmPtr);
+    shmdt(msgShmPtr);
+    shmdt(PCBShmPtr);
+    shmdt(clockShmPtr);
     exit(0);
 }

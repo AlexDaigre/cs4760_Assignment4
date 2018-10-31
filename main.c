@@ -16,8 +16,8 @@
 #include "definitions.h"
 #include "queue.h"
 
-// void childClosed(int sig);
-void childClosed();
+void childClosed(int sig);
+// void childClosed();
 void closeProgramSignal(int sig);
 void closeProgram();
 static void interrupt(int sig, siginfo_t* info, void* context);
@@ -42,7 +42,7 @@ FILE* outputFile;
 
 int main (int argc, char *argv[]) {
     //set signals
-    // signal(SIGCHLD, childClosed);
+    signal(SIGCHLD, childClosed);
     signal(SIGINT, closeProgramSignal);
 
     //set default values and get command line inputs
@@ -86,7 +86,7 @@ int main (int argc, char *argv[]) {
     msgShmPtr = setupMsgCenter();
     msgShmPtr[0] = -1;
     msgShmPtr[1] = -1;
-    msgShmPtr[2] = -1;
+    msgShmPtr[2] = 1;
 
     PCBShmPtr = setupSharedPCBs();
     sem = setupSemaphore();
@@ -108,16 +108,14 @@ int main (int argc, char *argv[]) {
             // printf("Creating process!\n");
             createProcesses();
         }
-        if ((msgShmPtr[0] == -1) && (msgShmPtr[1] == -1)){
+        if (msgShmPtr[2] == 1){
             pid_t nextProcess = nextProcessToschedule();
             if (nextProcess > 0){
                 msgShmPtr[0] = nextProcess;
                 msgShmPtr[1] = timeQuantum;
+                msgShmPtr[2] = 0;
                 printf("Scheduled %d for %d\n", msgShmPtr[0], msgShmPtr[1]);
             }
-        }
-        if (msgShmPtr[2] == 1){
-            childClosed();
         }
         advanceTime();
     }
@@ -125,30 +123,9 @@ int main (int argc, char *argv[]) {
     closeProgram();
 }
 
-// void childClosed(int sig){
-//     pid_t closedChild = wait(NULL);      
-//     printf("closeing child %d\n", closedChild);
-//     int closedPCB = -1;
-//     int i;
-//     for(i=0; i<maxProcesses; i++){
-//         if (PCBShmPtr[i].pid == closedChild){
-//             closedPCB = i;
-//             // printf("closedPCB %d\n", closedPCB);
-//             break;
-//         }
-//     }
-//     avaliblePCBs[i] = 0;
-//     removeFromQueue(closedChild);
-//     if (msgShmPtr[0] == closedChild){
-//         printf("Unscheduling child %d\n", closedChild);
-//         msgShmPtr[0] = -1;
-//         msgShmPtr[1] = -1; 
-//     }
-//     currentProcesses--;
-// }
-
-void childClosed(){
+void childClosed(int sig){
     pid_t closedChild = wait(NULL);
+    removeFromQueue(closedChild);      
     printf("closeing child %d\n", closedChild);
     int closedPCB = -1;
     int i;
@@ -159,13 +136,33 @@ void childClosed(){
             break;
         }
     }
-    msgShmPtr[0] = -1;
-    msgShmPtr[1] = -1;
-    msgShmPtr[2] = -1;
-    avaliblePCBs[i] = 0;
-    removeFromQueue(closedChild);
+    avaliblePCBs[closedPCB] = 0;
+    if (msgShmPtr[0] == closedChild){
+        printf("Unscheduling child %d\n", closedChild);
+        msgShmPtr[2] = 1;
+    }
     currentProcesses--;
 }
+
+// void childClosed(){
+//     pid_t closedChild = wait(NULL);
+//     printf("closeing child %d\n", closedChild);
+//     int closedPCB = -1;
+//     int i;
+//     for(i=0; i<maxProcesses; i++){
+//         if (PCBShmPtr[i].pid == closedChild){
+//             closedPCB = i;
+//             // printf("closedPCB %d\n", closedPCB);
+//             break;
+//         }
+//     }
+//     msgShmPtr[0] = -1;
+//     msgShmPtr[1] = -1;
+//     msgShmPtr[2] = -1;
+//     avaliblePCBs[i] = 0;
+//     removeFromQueue(closedChild);
+//     currentProcesses--;
+// }
 
 void createProcesses(){
     // printf("creating child\n");
@@ -189,7 +186,7 @@ void createProcesses(){
             }
         }
         if(firstOpenPCB >= 0){
-            printf("creating child\n");
+            // printf("creating child\n");
             createNextProcessAt = -1;
             newForkPid = fork();
             if (newForkPid == 0){
@@ -217,9 +214,9 @@ void createProcesses(){
 }
 
 void advanceTime(){
-    clockShmPtr[0] += 1;
-    clockShmPtr[1] += rand() % 1000;
-    // clockShmPtr[1] += 100;
+    // clockShmPtr[0] += 1;
+    // clockShmPtr[1] += rand() % 1000;
+    clockShmPtr[1] += 1000;
     while (clockShmPtr[1] >= 1000000000){
         clockShmPtr[1] -= 1000000000;
         clockShmPtr[0]++;

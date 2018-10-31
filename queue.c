@@ -21,7 +21,7 @@ void addToQueue(pid_t process, int priority){
             }
         }
         lowPriorityQueue[nextOpenPlace] = process;
-        // printf("Added %d to low queue at position %d\n", process, nextOpenPlace);
+        printf("Added %d to low queue at position %d\n", process, nextOpenPlace);
     } else {
         int i;
         for(i=0; i<maxProcesses; i++){
@@ -31,7 +31,7 @@ void addToQueue(pid_t process, int priority){
             }
         }
         highPriorityQueue[nextOpenPlace] = process;
-        // printf("Added %d to high queue at position %d\n", process, nextOpenPlace);
+        printf("Added %d to high queue at position %d\n", process, nextOpenPlace);
     }
 }
 
@@ -46,7 +46,7 @@ void removeFromQueue(pid_t process){
     }
     if (closedProcess >= 0){
         lowPriorityQueue[closedProcess] = 0;
-        // printf("Removed %d from low queue at position %d\n", process, closedProcess);
+        printf("Removed %d from low queue at position %d\n", process, closedProcess);
         return;
     }
     
@@ -59,7 +59,7 @@ void removeFromQueue(pid_t process){
     }
     if (closedProcess >= 0){
         highPriorityQueue[closedProcess] = 0;
-        // printf("Removed %d from high queue at position %d\n", process, closedProcess);
+        printf("Removed %d from high queue at position %d\n", process, closedProcess);
     }
 }
 
@@ -87,11 +87,20 @@ pid_t nextProcessToschedule(){
     return -1;
 }
 
+// pid_t nextProcessToschedule(){
+//     int i = 0;
+//     while (i < 18){
+
+//     }
+// }
+
+
+
 int avalibleHighPriorityItems(){
     int i;
     for(i=0; i<maxProcesses; i++){
         if (highPriorityQueue[i] != 0){
-            // printf("highPriorityQueue[%d] == %d\n", i, highPriorityQueue[i]);
+            printf("highPriorityQueue[%d] == %d\n", i, highPriorityQueue[i]);
             return 1;
         }
     }

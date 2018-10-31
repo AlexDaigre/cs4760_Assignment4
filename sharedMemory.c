@@ -53,7 +53,7 @@ int* setupMsgCenter(){
         exit(1);
     }
 
-    msgShmId = shmget(sharedMsgkKey, sizeof(int)*3, IPC_CREAT | 0666);
+    msgShmId = shmget(sharedMsgkKey, sizeof(int)*4, IPC_CREAT | 0666);
     if (msgShmId < 0) {
         printf("shmget error in parrent: setupMsgCenter\n");
         printf("Error: %d\n", errno);

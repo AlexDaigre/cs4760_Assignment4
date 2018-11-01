@@ -117,6 +117,7 @@ int main (int argc, char *argv[]) {
                 msgShmPtr[1] = timeQuantum;
                 msgShmPtr[2] = 1;
                 printf("Scheduled %d to run.\n", msgShmPtr[0]);
+                fprintf(outputFile, "Scheduled %d to run.\n", msgShmPtr[0]);
             }
         }
         advanceTime();
@@ -129,6 +130,7 @@ void childClosed(int sig){
     pid_t closedChild = wait(NULL);
     removeFromQueue(closedChild);      
     printf("closing child %d\n", closedChild);
+    fprintf(outputFile, "closing child %d\n", closedChild);
     int closedPCB = -1;
     int i;
     for(i=0; i<maxProcesses; i++){
@@ -146,6 +148,7 @@ void childClosed(int sig){
     avaliblePCBs[closedPCB] = 0;
     if (msgShmPtr[0] == closedChild){
         printf("Unscheduling child %d\n", closedChild);
+        fprintf(outputFile, "Unscheduling child %d\n", closedChild);
         msgShmPtr[2] = -1;
     }
     currentProcesses--;
@@ -178,10 +181,12 @@ void createProcesses(){
             newForkPid = fork();
             if (newForkPid == 0){
                 execlp("./worker","./worker", NULL);
-                fprintf(stderr,"Failed to exec worker!\n");
+                fprintf(stderr, "Failed to exec worker!\n");
+                fprintf(outputFile, "Failed to exec worker!\n");
                 exit(1);
             }
             printf("Execed child %d\n", newForkPid);
+            fprintf(outputFile, "Execed child %d\n", newForkPid);
             struct ProcessControlBlock newPCB;
             newPCB.pid = newForkPid;
             int priority = (rand() % 100) > 90 ? 0 : 1;
@@ -207,6 +212,7 @@ void advanceTime(){
         clockShmPtr[1] -= 1000000000;
         clockShmPtr[0]++;
         printf("%d:%d\n", clockShmPtr[0], clockShmPtr[1]);
+        fprintf(outputFile, "%d:%d\n", clockShmPtr[0], clockShmPtr[1]);
     }
 }
 
@@ -215,6 +221,7 @@ void setupOutputFile(){
     outputFile = fopen(logFile, "w");
     if (outputFile == NULL){
         printf("Failed to open output file.\n");
+        fprintf(outputFile, "Failed to open output file.\n");
         closeProgram();
     }
 }

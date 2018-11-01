@@ -23,14 +23,25 @@ sem_t* sem;
 int main (int argc, char *argv[]) {
     int clockShmId;
     signal(SIGINT, closeProgramSignal);
+
+    char* logFile = "logFile.txt";
+    FILE* outputFile = fopen(logFile, "w");
+    if (outputFile == NULL){
+        printf("Failed to open output file.\n");
+        fprintf(outputFile, "Failed to open output file.\n");
+        closeProgram();
+    }
+
     printf("Child %d started\n", getpid());
+    fprintf(outputFile, "Child %d started\n", getpid()); 
 
     clockShmPtr = setupSharedClock();
     msgShmPtr = setupMsgCenter();
     PCBShmPtr = setupSharedPCBs();
     sem = sem_open(SEMNAME, 0);
     if (sem == SEM_FAILED) {
-        perror("    Failed to open semphore for empty");
+        printf("Failed to open semphore for empty");
+        fprintf(outputFile, "Failed to open semphore for empty");
         closeProgram();
     }
 
@@ -64,6 +75,7 @@ int main (int argc, char *argv[]) {
                     timeToEndSec++;
                 }
                 printf("Child(%d) begun running at %d:%d it will run untill %d:%d.\n", getpid(), clockShmPtr[0], clockShmPtr[1], timeToEndSec, timeToEndFrac);
+                fprintf(outputFile, "Child(%d) begun running at %d:%d it will run untill %d:%d.\n", getpid(), clockShmPtr[0], clockShmPtr[1], timeToEndSec, timeToEndFrac);
 
                 while (!((timeToEndSec <= clockShmPtr[0]) || ((timeToEndSec == clockShmPtr[0]) && (timeToEndFrac <= clockShmPtr[1])))) {}
                 
@@ -71,15 +83,18 @@ int main (int argc, char *argv[]) {
                 PCBShmPtr[myPCBIndex].totalCpuTimeUsed += timeToEndFrac;
                 
                 printf("Child(%d) has finished running and it will ", getpid());
-               
+                fprintf(outputFile, "Child(%d) has finished running and it will ", getpid());
+
                 msgShmPtr[2] = -1;
 
                 if(PCBShmPtr[myPCBIndex].totalCpuTimeUsed > 500){    
                     if ((rand() % 2) >= 1){
                         printf("close.\n");
+                        fprintf(outputFile, "close.\n");
                         exitFlag =1 ;
                     } else {
                         printf("requeue.\n");
+                        fprintf(outputFile, "requeue.\n");
                     }
                 }
             }

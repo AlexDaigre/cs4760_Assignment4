@@ -1,128 +1,121 @@
-commit c544a5deb05a5ee6233cc0b3324b988b776ff3e2 (HEAD -> master, origin/master, origin/HEAD)
+commit 8638e86a22c0f6dcc5e941ce00c25300c4348468 (HEAD -> master, origin/master)
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Thu Nov 1 00:12:36 2018 -0500
+
+    idk
+
+commit 68836377d04de5542231a958bd875be2bf314ad7
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Wed Oct 31 23:35:10 2018 -0500
+
+    idk, children are no longer entering into the semaphore
+
+commit cc29756fe75544ed8d6e1eda7d78df86a45c5cee
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Wed Oct 31 22:08:45 2018 -0500
+
+    updated so that the
+    PCB is updated with info on the run
+
+commit 98fbbea23f8e47783c17355ee21cd35e45c8b050
+Author: Alexander Daigre <alex@UMSLDIAL-147.umsl.edu>
+Date:   Wed Oct 31 18:20:05 2018 -0500
+
+    gonna branch and start againish?
+
+commit 06f1ee5e0f5c565a1bcf35cd447390ec057dce20
+Author: Alexander Daigre <alex@UMSLDIAL-147.umsl.edu>
+Date:   Wed Oct 31 17:48:54 2018 -0500
+
+    restructured program flow
+
+commit 42e9de2c8c2b8b43735c9d7ccc397f26ecd19814
+Author: Alexander Daigre <alex@UMSLDIAL-147.umsl.edu>
+Date:   Wed Oct 31 17:23:19 2018 -0500
+
+    no idea why this is just going worse and worse
+
+commit 52e1d33ba8e6505408b1cd7c681b661c112d816b
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Wed Oct 31 11:46:32 2018 -0500
+
+    idk, stops working after so many processes
+
+commit 3efeca746d34c828694e56ccca7de9adfd4d3199
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Wed Oct 31 10:50:25 2018 -0500
+
+    I think the scheduling is working
+
+commit 3d09202e722b13c830318bf81a204323e86bda2f
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Wed Oct 31 06:20:11 2018 -0500
+
+    reorginiesed some files, added files for puting queue functions in, updated close program functions
+
+commit 928fc6ad3a6de88ce2ec7174e2aed767e410f7b0
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 16:04:36 2018 -0500
+Date:   Tue Oct 30 18:43:08 2018 -0500
 
-    finished program. added output to file
+    fixed bug from lat commit, really works now
 
-commit dc66caeadd9502df26eea38f39c87cf4baee9081
+commit 265c35dac656953788890dbcdb1be09a5a2c9378
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 15:45:09 2018 -0500
+Date:   Tue Oct 30 18:40:59 2018 -0500
 
-    updated console output to be more descriptive.
+    extracted shared memory functions into their own files so that they may be used by maun and worker. need to update program closing to ensure shared memory is closed.
 
-commit e978ff7d8c9cb896572e40a4a5de112cbe767a0f
+commit e39ec98e5f57cf83f061da5f74d7126c2a65863a
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 15:36:42 2018 -0500
+Date:   Tue Oct 30 17:57:49 2018 -0500
 
-    re-added closing based on 100 programs being closed. Cleaned up comments.
+    commented out, like, everything in the child because it was out of date and broken
 
-commit ae8aa2cefde702714e395115c14f00e8f85e7a7f
+commit 8ad36e29d6e24f0d3791242b743e26694a946904
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 15:25:31 2018 -0500
+Date:   Tue Oct 30 17:53:10 2018 -0500
 
-    think its working now, not fully tested.
+    opens and closes children
 
-commit ec62067e765ed6592fb1529568c7cffea984d920
+commit 44be89faaa8ee31aa0dac125b5a267a46ff602a6
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 15:25:17 2018 -0500
+Date:   Tue Oct 30 17:45:28 2018 -0500
 
-    think its working now, not fully tested.
+    opening child processes and creating PCB seems to be working
 
-commit c51d1b8cca09db039c60740e51225746e7f54264
-Merge: 48060be 750f30e
+commit 28dcaf3519de8221d9b0c9386ac5caff45128f93
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 13:49:27 2018 -0500
+Date:   Tue Oct 30 17:11:52 2018 -0500
 
-    merged with master
+    created newPCB creation code, replaced max processes with a definition
 
-commit 48060bee943013ae41e1603f260576331e382375
+commit b53f5a76f2f7d11a6bcea9974be0e33abef76c38
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Tue Oct 23 22:01:37 2018 -0500
+
+    continued work. fixed error with alocating struct space. create process section further defined, but not completed.
+
+commit bac1bec69f8d0577305414ce3b5c15596af9e80e
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Tue Oct 23 02:24:16 2018 -0500
+
+    added back in the elements to insure that the program closes based on run time, also tested that ctrl-c is still working
+
+commit 1181e71f44a8b818a8eb96072d24810036e32a5f
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Tue Oct 23 02:18:03 2018 -0500
+
+    re-added inital outputs and tested to see if errors occured when initilising memory
+
+commit ffc1e3a28b1892b08192a9c364e175fd8236c88a
+Author: Alexander Daigre <alex@Alexanders-MacBook-Pro.local>
+Date:   Tue Oct 23 02:01:23 2018 -0500
+
+    reorginised program structure. added shared memory for elements we need.
+
+commit 94ea216fe24e338dd27ec91b2c47e37f1c8cb183
 Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Mon Oct 15 13:45:44 2018 -0500
+Date:   Mon Oct 22 17:27:04 2018 -0500
 
-    not sure
-
-commit 750f30e37c126e009e207ef13351ce1b7ba270da
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Mon Oct 15 12:18:49 2018 -0500
-
-    work
-
-commit 25fb51c833c4e820b87011267beff0ac7c45f2a0
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Sun Oct 14 19:11:48 2018 -0500
-
-    all the pices seem to be working, problem is it creates all processes before going tinto loop to handle them closing
-
-commit ded6b317021e61b7089a7e1cd383d75c61c081d9
-Merge: b79f7d0 81876e6
-Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Wed Oct 10 18:41:11 2018 -0500
-
-    merged with work from desktop
-
-commit b79f7d0bd4fef1160091c7848269c46a4693500c
-Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Wed Oct 10 18:36:40 2018 -0500
-
-    things
-
-commit 81876e6cbca51f056f68442d9d108ae41eb60361
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Wed Oct 10 12:42:17 2018 -0500
-
-    added, untested, close function that signals children
-
-commit b03752ed8ecbb3f7fb00eb9e192a3f13e5a03f75
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Wed Oct 10 12:28:00 2018 -0500
-
-    added git log
-
-commit dea823cea82fee5df6b33aca1bd877e092fe41ec
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Wed Oct 10 12:13:20 2018 -0500
-
-    process tracking might be working, process limiting seems to be working
-
-commit b93a6d137a057c7e31d89713c06d11d1458a2ea7
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Wed Oct 10 12:04:57 2018 -0500
-
-    merged and compiled for linux
-
-commit d80bbdb20bae88f0b8382e5ad6d63c2dd523ebd9
-Merge: cb2aa09 8bf789d
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Wed Oct 10 11:56:45 2018 -0500
-
-    Merge branch 'master' of https://github.com/AlexDaigre/cs4760_Assignment3
-
-commit cb2aa09229684047bafbe21a78f9ec26604d5f6a
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Wed Oct 10 11:56:42 2018 -0500
-
-    old version
-
-commit 8bf789d8f278b4bb57d7aad5f380e9e087aa1335
-Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Tue Oct 9 17:37:50 2018 -0500
-
-    working
-
-commit 24da7221932b3163cdd5743c14cf20167b15ec6d
-Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Tue Oct 9 15:45:06 2018 -0500
-
-    removed process limiting code
-
-commit fdf8417f1333eb4e064d7110eb3d3bfa0ce6266d (origin/nonWorkingChildLimiting, nonWorkingChildLimiting)
-Author: Alexander Daigre <alex@Alexanders-MBP.dhcp.umsl.edu>
-Date:   Tue Oct 9 15:41:29 2018 -0500
-
-    working on limiting processes
-
-commit a11181f478dfa7ac75c2ab5670b2acc7a925a24e
-Author: RockThunderheart <alexdaigre@gmail.com>
-Date:   Sat Oct 6 17:23:15 2018 -0500
-
-    inital commit, coppied from ass 2
+    initial commit, project coppied from project 3
+(END)

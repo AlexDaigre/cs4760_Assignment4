@@ -250,6 +250,11 @@ int setTimer(double sec){
 }
 
 void closeProgram(){
+    printf("Total time run %d:%d.\n", clockShmPtr[0], clockShmPtr[1]);
+    fprintf(outputFile, "Total time run %d:%d.\n", clockShmPtr[0], clockShmPtr[1]);
+    printf("Total run time of all children %d:%d.\n", cpuTimeUsedByAllChildren[0], cpuTimeUsedByAllChildren[1]);
+    fprintf(outputFile, "Total run time of all children %d:%d.\n", cpuTimeUsedByAllChildren[0], cpuTimeUsedByAllChildren[1]);
+
     int i;
     for(i = 0; i < maxProcesses; i++){
         if (avaliblePCBs[i] == 1){

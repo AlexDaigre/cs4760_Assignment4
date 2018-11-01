@@ -32,16 +32,45 @@ int main (int argc, char *argv[]) {
 
     // printf("CHILD clock: %d:%d\n", clockShmPtr[0], clockShmPtr[1]);
 
+    int myPCBIndex;
+    int i;
+    for (i=0; i<maxProcesses; i++){
+        if (PCBShmPtr[i].pid == getpid()){
+            myPCBIndex = i;
+        }
+    }
+
     int exitFlag = 0;
     do{
         sem_wait(sem);
             if (msgShmPtr[0] == getpid()){
                 printf("Child(%d) has determined it was scheduled.\n", getpid());
+                int timeToRun;
+                int timeToEndFrac;
+                int timeToEndSec = 0;
                 if (rand() % 2 >= 1){
-                    msgShmPtr[2] = 1;
-                    exitFlag = 1;
+                    timeToRun = (rand() % msgShmPtr[2]);
+                    timeToEndFrac = timeToRun + clockShmPtr[1];
+                } else {
+                    timeToEndFrac = msgShmPtr[2] + clockShmPtr[0];
                 }
+                while (timeToEndFrac >= 1000000000){
+                    timeToEndFrac -= 1000000000;
+                    timeToEndSec++;
+                }
+
+                while (!((timeToEndSec <= msgShmPtr[0]) || ((timeToEndSec == msgShmPtr[0]) && (timeToEndFrac <= msgShmPtr[1])))) {}
+                
+                PCBShmPtr[myPCBIndex].timeUsedDurringLastBurst = timeToEndFrac;
+                PCBShmPtr[myPCBIndex].totalCpuTimeUsed += timeToEndFrac;
+               
                 msgShmPtr[2] = 1;
+                
+                if(PCBShmPtr[myPCBIndex].totalCpuTimeUsed > 500){    
+                    if (rand() % 2 >= 1){
+                        closeProgram();
+                    }
+                }
             }
         sem_post(sem);
     }while(exitFlag == 0);

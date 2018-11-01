@@ -100,7 +100,7 @@ int avalibleHighPriorityItems(){
     int i;
     for(i=0; i<maxProcesses; i++){
         if (highPriorityQueue[i] != 0){
-            printf("highPriorityQueue[%d] == %d\n", i, highPriorityQueue[i]);
+            // printf("highPriorityQueue[%d] == %d\n", i, highPriorityQueue[i]);
             return 1;
         }
     }

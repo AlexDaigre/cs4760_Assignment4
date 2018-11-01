@@ -28,9 +28,13 @@ int main (int argc, char *argv[]) {
     clockShmPtr = setupSharedClock();
     msgShmPtr = setupMsgCenter();
     PCBShmPtr = setupSharedPCBs();
-    sem = setupSemaphore();
+    sem = sem_open(SEMNAME, 0);
+    if (sem == SEM_FAILED) {
+        perror("    Failed to open semphore for empty");
+        closeProgram();
+    }
 
-    printf("CHILD clock: %d:%d\n", clockShmPtr[0], clockShmPtr[1]);
+    // printf("CHILD clock: %d:%d\n", clockShmPtr[0], clockShmPtr[1]);
 
     int myPCBIndex;
     int i;
@@ -39,21 +43,21 @@ int main (int argc, char *argv[]) {
             myPCBIndex = i;
         }
     }
-    printf("found my pcb\n");
+    // printf("Found my pcb\n");
 
     int exitFlag = 0;
     do{
         sem_wait(sem);
             if (msgShmPtr[0] == getpid()){
-                printf("scheduled");
+                // printf("scheduled");
                 int timeToRun;
                 int timeToEndFrac;
                 int timeToEndSec = 0;
                 if ((rand() % 2) >= 1){
-                    timeToRun = (rand() % msgShmPtr[2]);
+                    timeToRun = (rand() % msgShmPtr[1]);
                     timeToEndFrac = timeToRun + clockShmPtr[1];
                 } else {
-                    timeToEndFrac = msgShmPtr[2] + clockShmPtr[0];
+                    timeToEndFrac = msgShmPtr[1] + clockShmPtr[0];
                 }
                 while (timeToEndFrac >= 1000000000){
                     timeToEndFrac -= 1000000000;
@@ -61,22 +65,23 @@ int main (int argc, char *argv[]) {
                 }
                 printf("Child(%d) begun running at %d:%d it will run untill %d:%d.\n", getpid(), clockShmPtr[0], clockShmPtr[1], timeToEndSec, timeToEndFrac);
 
-                while (!((timeToEndSec <= msgShmPtr[0]) || ((timeToEndSec == msgShmPtr[0]) && (timeToEndFrac <= msgShmPtr[1])))) {}
+                while (!((timeToEndSec <= clockShmPtr[0]) || ((timeToEndSec == clockShmPtr[0]) && (timeToEndFrac <= clockShmPtr[1])))) {}
                 
                 PCBShmPtr[myPCBIndex].timeUsedDurringLastBurst = timeToEndFrac;
                 PCBShmPtr[myPCBIndex].totalCpuTimeUsed += timeToEndFrac;
-               
-                msgShmPtr[2] = 1;
                 
                 printf("Child(%d) has finished running and it will ", getpid());
+               
+                msgShmPtr[2] = -1;
 
                 if(PCBShmPtr[myPCBIndex].totalCpuTimeUsed > 500){    
-                    if (rand() % 2 >= 1){
+                    if ((rand() % 2) >= 1){
                         printf("close.\n");
-                        closeProgram();
+                        exitFlag =1 ;
+                    } else {
+                        printf("requeue.\n");
                     }
                 }
-                printf("requeue.\n");
             }
         sem_post(sem);
     }while(exitFlag == 0);
@@ -92,5 +97,6 @@ void closeProgram(){
     shmdt(msgShmPtr);
     shmdt(PCBShmPtr);
     shmdt(clockShmPtr);
+    sem_unlink(SHMNAME);
     exit(0);
 }

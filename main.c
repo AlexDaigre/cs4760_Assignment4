@@ -88,7 +88,7 @@ int main (int argc, char *argv[]) {
     msgShmPtr = setupMsgCenter();
     msgShmPtr[0] = -1;
     msgShmPtr[1] = -1;
-    msgShmPtr[2] = 1;
+    msgShmPtr[2] = -1;
 
     PCBShmPtr = setupSharedPCBs();
     sem = setupSemaphore();
@@ -104,18 +104,18 @@ int main (int argc, char *argv[]) {
     //     closeProgram();
     // }
 
-    while(1==1){
+    while(clockShmPtr[0] < 80){
         // printf("looping!\n");
         if ((currentProcesses < maxProcesses)){
             // printf("Creating process!\n");
             createProcesses();
         }
-        if (msgShmPtr[2] == 1){
+        if (msgShmPtr[2] == -1){
             pid_t nextProcess = nextProcessToschedule();
             if (nextProcess > 0){
                 msgShmPtr[0] = nextProcess;
                 msgShmPtr[1] = timeQuantum;
-                msgShmPtr[2] = 0;
+                msgShmPtr[2] = 1;
                 printf("Scheduled %d to run.\n", msgShmPtr[0]);
             }
         }
@@ -146,7 +146,7 @@ void childClosed(int sig){
     avaliblePCBs[closedPCB] = 0;
     if (msgShmPtr[0] == closedChild){
         printf("Unscheduling child %d\n", closedChild);
-        msgShmPtr[2] = 1;
+        msgShmPtr[2] = -1;
     }
     currentProcesses--;
 }
@@ -243,6 +243,12 @@ int setTimer(double sec){
 }
 
 void closeProgram(){
+    int i;
+    for(i = 0; i < maxProcesses; i++){
+        if (avaliblePCBs[i] == 1){
+            kill(PCBShmPtr[i].pid, SIGINT);
+        }
+    }
     shmctl(msgShmId, IPC_RMID, NULL);
     // shmdt(msgShmPtr);
     shmctl(PCBShmId, IPC_RMID, NULL);
@@ -253,5 +259,6 @@ void closeProgram(){
     fclose(outputFile);
     // printf("Exiting gracefully.\n");
     
+    while (wait(NULL) != -1)
     exit(0);
 }

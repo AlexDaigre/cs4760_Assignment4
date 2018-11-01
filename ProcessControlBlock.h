@@ -4,8 +4,8 @@
 struct ProcessControlBlock {
     pid_t pid;
     int totalCpuTimeUsed;
-    int totalTimeInSystem;
     int timeUsedDurringLastBurst;
+    int timeStarted[2];
     int priority;
 };
 

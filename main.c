@@ -34,6 +34,8 @@ sem_t* sem;
 
 int createNextProcessAt = -1;
 
+int cpuTimeUsedByAllChildren[2];
+
 int currentProcesses = 0;
 
 int totalProcesses = 0;
@@ -114,7 +116,7 @@ int main (int argc, char *argv[]) {
                 msgShmPtr[0] = nextProcess;
                 msgShmPtr[1] = timeQuantum;
                 msgShmPtr[2] = 0;
-                printf("Scheduled %d for %d\n", msgShmPtr[0], msgShmPtr[1]);
+                printf("Scheduled %d to run.\n", msgShmPtr[0]);
             }
         }
         advanceTime();
@@ -126,7 +128,7 @@ int main (int argc, char *argv[]) {
 void childClosed(int sig){
     pid_t closedChild = wait(NULL);
     removeFromQueue(closedChild);      
-    printf("closeing child %d\n", closedChild);
+    printf("closing child %d\n", closedChild);
     int closedPCB = -1;
     int i;
     for(i=0; i<maxProcesses; i++){
@@ -136,6 +138,11 @@ void childClosed(int sig){
             break;
         }
     }
+    cpuTimeUsedByAllChildren[1] += PCBShmPtr[closedPCB].totalCpuTimeUsed;
+    while (cpuTimeUsedByAllChildren[1] >= 1000000000){
+        cpuTimeUsedByAllChildren[1] -= 1000000000;
+        cpuTimeUsedByAllChildren[0]++;
+    }
     avaliblePCBs[closedPCB] = 0;
     if (msgShmPtr[0] == closedChild){
         printf("Unscheduling child %d\n", closedChild);
@@ -143,26 +150,6 @@ void childClosed(int sig){
     }
     currentProcesses--;
 }
-
-// void childClosed(){
-//     pid_t closedChild = wait(NULL);
-//     printf("closeing child %d\n", closedChild);
-//     int closedPCB = -1;
-//     int i;
-//     for(i=0; i<maxProcesses; i++){
-//         if (PCBShmPtr[i].pid == closedChild){
-//             closedPCB = i;
-//             // printf("closedPCB %d\n", closedPCB);
-//             break;
-//         }
-//     }
-//     msgShmPtr[0] = -1;
-//     msgShmPtr[1] = -1;
-//     msgShmPtr[2] = -1;
-//     avaliblePCBs[i] = 0;
-//     removeFromQueue(closedChild);
-//     currentProcesses--;
-// }
 
 void createProcesses(){
     // printf("creating child\n");
@@ -194,16 +181,15 @@ void createProcesses(){
                 fprintf(stderr,"Failed to exec worker!\n");
                 exit(1);
             }
+            printf("Execed child %d\n", newForkPid);
             struct ProcessControlBlock newPCB;
             newPCB.pid = newForkPid;
             int priority = (rand() % 100) > 90 ? 0 : 1;
             newPCB.priority = priority;
-            newPCB.timeUsedDurringLastBurst[0] = 0;
-            newPCB.timeUsedDurringLastBurst[1] = 0;
-            newPCB.totalCpuTimeUsed[0] = 0;
-            newPCB.totalCpuTimeUsed[1] = 0;
-            newPCB.totalTimeInSystem[0] = 0;
-            newPCB.totalTimeInSystem[1] = 0;
+            newPCB.timeUsedDurringLastBurst = 0;
+            newPCB.totalCpuTimeUsed = 0;
+            newPCB.timeStarted[0] = clockShmPtr[0];
+            newPCB.timeStarted[1] = clockShmPtr[1];
             avaliblePCBs[i] = 1;
             PCBShmPtr[i] = newPCB;
             createNextProcessAt = -1;

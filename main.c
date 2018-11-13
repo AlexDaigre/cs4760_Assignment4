@@ -271,6 +271,6 @@ void closeProgram(){
     fclose(outputFile);
     // printf("Exiting gracefully.\n");
     
-    while (wait(NULL) != -1)
+    while (wait(NULL) != -1){}
     exit(0);
 }

@@ -3,9 +3,9 @@
 
     #include <semaphore.h>
 
-    #define SEMNAME "/daigreSem432098786"
-    #define SHMNAME "/tmp/daigreTmp23568"
-    #define SHMPCBNAME "/tmp/daigreTmp96767"
+    #define SEMNAME "/daigreSem432435467870"
+    #define SHMNAME "/tmp/daigreTmp4357658"
+    #define SHMPCBNAME "/tmp/daigreTmp568454533"
 
     #define CLOCKVAR 0
     #define MSGVAR 1

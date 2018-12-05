@@ -1,104 +1,53 @@
-Child 16412 started
-le.txt
+Log file name: logFile.txt
 Max run time: 20
 1:0
 2:0
-Execed child 16403
+Execed child 52243
 3:0
 4:0
-Execed child 16404
-Scheduled 16404 to run.
+Execed child 52244
+Scheduled 52244 to run.
+Scheduled 52244 to run.
+closing child 52244
+Unscheduling child 52244
 5:0
-Execed child 16405
+Execed child 52246
+Scheduled 52246 to run.
+Scheduled 52246 to run.
+closing child 52246
+Unscheduling child 52246
 6:0
-Execed child 16406
+Execed child 52247
+Scheduled 52247 to run.
+Scheduled 52247 to run.
+closing child 52247
+Unscheduling child 52247
 7:0
 8:0
-Execed child 16407
+Execed child 52248
+Scheduled 52248 to run.
+Scheduled 52248 to run.
+closing child 52248
+Unscheduling child 52248
 9:0
-Execed child 16408
+Execed child 52249
+Scheduled 52249 to run.
+Scheduled 52249 to run.
+closing child 52249
+Unscheduling child 52249
 10:0
-Execed child 16409
+Execed child 52250
+Scheduled 52250 to run.
+Scheduled 52250 to run.
+closing child 52250
+Unscheduling child 52250
 11:0
 12:0
-Execed child 16410
+Execed child 52251
+Scheduled 52251 to run.
+Scheduled 52251 to run.
+closing child 52251
+Unscheduling child 52251
 13:0
-14:0
-Execed child 16411
-15:0
-Execed child 16412
-16:0
-17:0
-Execed child 16413
-18:0
-19:0
-Execed child 16414
-20:0
-Execed child 16415
-21:0
-22:0
-Execed child 16416
-23:0
-Execed child 16417
-24:0
-25:0
-Execed child 16418
-26:0
-Execed child 16419
-27:0
-Execed child 16420
-28:0
-29:0
-30:0
-31:0
-32:0
-33:0
-34:0
-35:0
-36:0
-37:0
-38:0
-39:0
-40:0
-41:0
-42:0
-43:0
-44:0
-45:0
-46:0
-47:0
-48:0
-49:0
-50:0
-51:0
-52:0
-53:0
-54:0
-55:0
-56:0
-57:0
-58:0
-59:0
-60:0
-61:0
-62:0
-63:0
-64:0
-65:0
-66:0
-67:0
-68:0
-69:0
-70:0
-71:0
-72:0
-73:0
-74:0
-75:0
-76:0
-77:0
-78:0
-79:0
-80:0
-Total time run 80:0.
-Total run time of all children 0:0.
+Total time run 13:653218000.
+Total run time of all children 4:98163007.

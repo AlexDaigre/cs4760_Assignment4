@@ -101,7 +101,7 @@ struct ProcessControlBlock* setupSharedPCBs(){
 }
 
 sem_t* setupSemaphore(){
-    sem_t* sem = sem_open(SEMNAME, O_CREAT, 0644, 1);
+    sem_t* sem = sem_open(SEMNAME, O_CREAT, 0666, 1);
     
     if (sem == SEM_FAILED) {
         printf("    Failed to open semphore for empty\n");
